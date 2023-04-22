@@ -36,14 +36,11 @@ class Folder(File):
         return loc
 
     def addFile(self, addFile):
-        if self.contains(addFile):
-            print("ERROR")
-            raise CustomError("File already exists!")
         self.contents.append(addFile)
 
     def contains(self, item):
         for _ in self.contents:
-            if _.name is item.name and _.extension is item.extension:
+            if _.name == item.name and _.extension == item.extension:
                 return True
         return False
 
@@ -51,7 +48,6 @@ class Folder(File):
 root = Folder("root", None)
 current_dir = root
 selected_dir = None
-i = 1
 
 if __name__ == "__main__":
     while True:
@@ -68,9 +64,9 @@ if __name__ == "__main__":
             print(" ㄴ", _file_.getName())
         print("==========================================")
         print("[1] Create File  [2] Create Folder   [3] Select File/Folder")
-        select = int(input("Choose what you want to do: "))
-        if select == 1:
-            print("Create File: If you want to quit, press ESC")
+        select = (input("Choose what you want to do: "))
+        if select == "1":
+            print("[ Create File ] If you want to quit, press ESC")
 
             if keyboard.is_pressed("ESC"):
                 continue
@@ -90,10 +86,24 @@ if __name__ == "__main__":
             k = 1
             while current_dir.contains(file):
                 file = File(name + " (" + str(k) + ")", current_dir, extension)
+                k += 1
 
             current_dir.addFile(file)
 
-        elif select == 2:
-            print("Create Folder")
-        elif select == 3:
+        elif select == "2":
+            print("[ Create Folder ] If you want to quit, press ESC")
+
+            if keyboard.is_pressed("ESC"):
+                continue
+
+            name = input("[ Create Folder ] Insert your file name (e.g. folder): ")
+
+            folder = Folder(name, current_dir)
+            k = 1
+            while current_dir.contains(folder):
+                folder = Folder(name + " (" + str(k) + ")", current_dir)
+                k += 1
+
+            current_dir.addFile(folder)
+        elif select == "3":
             print("Select File/Folder")
