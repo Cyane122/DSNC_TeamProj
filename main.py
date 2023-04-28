@@ -1,5 +1,4 @@
 from datetime import datetime
-import keyboard
 
 
 class CustomError(Exception):
@@ -66,11 +65,6 @@ if __name__ == "__main__":
         print("[1] Create File  [2] Create Folder   [3] Select File/Folder")
         select = (input("Choose what you want to do: "))
         if select == "1":
-            print("[ Create File ] If you want to quit, press ESC")
-
-            if keyboard.is_pressed("ESC"):
-                continue
-
             _input_ = input("[ Create File ] Insert your file name with extension (e.g. file.jpg): ")
             extension, name = "", ""
             tmp = False
@@ -78,10 +72,12 @@ if __name__ == "__main__":
                 if c == '.':
                     tmp = True
                     continue
+
                 if tmp:
                     extension = extension + c
                 else:
                     name = name + c
+
             file = File(name, current_dir, extension)
             k = 1
             while current_dir.contains(file):
@@ -91,11 +87,6 @@ if __name__ == "__main__":
             current_dir.addFile(file)
 
         elif select == "2":
-            print("[ Create Folder ] If you want to quit, press ESC")
-
-            if keyboard.is_pressed("ESC"):
-                continue
-
             name = input("[ Create Folder ] Insert your file name (e.g. folder): ")
 
             folder = Folder(name, current_dir)
