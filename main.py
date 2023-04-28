@@ -16,7 +16,7 @@ class File:
         self.time = datetime.now()
         self.extension = extension
 
-    def getName(self):
+    def getDisplayName(self):
         return self.name + "." + self.extension
 
 
@@ -44,26 +44,43 @@ class Folder(File):
         return False
 
 
-root = Folder("root", None)
-current_dir = root
-selected_dir = None
-
 if __name__ == "__main__":
+
+    root = Folder("root", None)
+    current_dir = root
+    selected_dir = root
+
     while True:
 
-        LIST = ["Create File", "Create Folder", "Select File/Folder" if (selected_dir is None) else None]
+        LIST = ["Create File",
+                "Create Folder"
+                ]
+        if selected_dir is None:
+            LIST.append("Select File/Folder")
+        else:
+            LIST.append("Deselect File/Folder")
         select = 0
 
         print("==========================================")
         print("Python File Manager")
         print("Current Direction: ", current_dir.getLocation())
+
+        if selected_dir is not None:
+            print("Selected Direction:", current_dir.getLocation())
+
         print("==========================================")
-        print(current_dir.getName())
+        print(current_dir.getDisplayName())
         for _file_ in current_dir.contents:
-            print(" ㄴ", _file_.getName())
+            print(" ㄴ", _file_.getDisplayName())
         print("==========================================")
-        print("[1] Create File  [2] Create Folder   [3] Select File/Folder")
+
+        tmp = 1
+        for k in LIST:
+            print("[", tmp, "]", k)
+            tmp += 1
+
         select = (input("Choose what you want to do: "))
+
         if select == "1":
             _input_ = input("[ Create File ] Insert your file name with extension (e.g. file.jpg): ")
             extension, name = "", ""
@@ -80,10 +97,14 @@ if __name__ == "__main__":
 
             file = File(name, current_dir, extension)
             k = 1
+            tmp = False
             while current_dir.contains(file):
+                tmp = True
                 file = File(name + " (" + str(k) + ")", current_dir, extension)
                 k += 1
 
+            if tmp:
+                print("[ Create File ] Duplicate file name: File name is changed into", file.getDisplayName())
             current_dir.addFile(file)
 
         elif select == "2":
@@ -91,10 +112,16 @@ if __name__ == "__main__":
 
             folder = Folder(name, current_dir)
             k = 1
+            tmp = False
             while current_dir.contains(folder):
+                tmp = True
                 folder = Folder(name + " (" + str(k) + ")", current_dir)
                 k += 1
 
+            if tmp:
+                print("[ Create Folder ] Duplicate folder name: folder name is changed into", folder.name)
+
             current_dir.addFile(folder)
+
         elif select == "3":
             print("Select File/Folder")
