@@ -64,6 +64,47 @@ def fileTree(_dir, depth):
             fileTree(d, depth + 1)
 
 
+def createFile():
+    _input_ = input("[ Create File ] Insert your file name with extension (e.g. file.jpg): ")
+    extension, name = "", ""
+    tmp = False
+    for c in _input_:
+        if c == '.':
+            if tmp:
+                name = name + '.' + extension
+                extension = ""
+            else:
+                tmp = True
+            continue
+        if tmp:
+            extension = extension + c
+        else:
+            name = name + c
+    if extension == "":
+        print("[ Create File ] Wrong input; Try again.")
+        createFile()
+        return
+    file = File(name, current_dir, extension)
+    k = 1
+    while current_dir.contains(file):
+        file = File(name + " (" + str(k) + ")", current_dir, extension)
+        k += 1
+
+    current_dir.addFile(file)
+
+
+def createFolder():
+    name = input("[ Create Folder ] Insert your file name (e.g. folder): ")
+
+    folder = Folder(name, current_dir)
+    k = 1
+    while current_dir.contains(folder):
+        folder = Folder(name + " (" + str(k) + ")", current_dir)
+        k += 1
+
+    current_dir.addFile(folder)
+
+
 if __name__ == "__main__":
     while True:
 
@@ -73,9 +114,14 @@ if __name__ == "__main__":
         if selected_dir is None:
             LIST.append("Select File/Folder")
         else:
-            LIST.append("Unselect File/Folder")
-            LIST.append("Copy File/Folder")
-            LIST.append("Move File/Folder")
+            if selected_dir is Folder:
+                LIST.append("Unselect Folder")
+                LIST.append("Copy Folder")
+                LIST.append("Move Folder")
+            else:
+                LIST.append("Unselect File")
+                LIST.append("Copy File")
+                LIST.append("Move File")
 
         print("==========================================")
         print("Python File Manager")
@@ -90,34 +136,8 @@ if __name__ == "__main__":
             idx += 1
         select = LIST[int(input("Choose what you want to do: ")) - 1]
         if select == "Create File":
-            _input_ = input("[ Create File ] Insert your file name with extension (e.g. file.jpg): ")
-            extension, name = "", ""
-            tmp = False
-            for c in _input_:
-                if c == '.':
-                    tmp = True
-                    continue
-                if tmp:
-                    extension = extension + c
-                else:
-                    name = name + c
-            file = File(name, current_dir, extension)
-            k = 1
-            while current_dir.contains(file):
-                file = File(name + " (" + str(k) + ")", current_dir, extension)
-                k += 1
-
-            current_dir.addFile(file)
-
+            createFile()
         elif select == "Create Folder":
-            name = input("[ Create Folder ] Insert your file name (e.g. folder): ")
-
-            folder = Folder(name, current_dir)
-            k = 1
-            while current_dir.contains(folder):
-                folder = Folder(name + " (" + str(k) + ")", current_dir)
-                k += 1
-
-            current_dir.addFile(folder)
+            createFolder()
         elif select == "3":
             print("Select File/Folder")
