@@ -1,4 +1,5 @@
 from datetime import datetime
+import keyboard
 
 
 class CustomError(Exception):
@@ -16,7 +17,7 @@ class File:
         self.time = datetime.now()
         self.extension = extension
 
-    def getDisplayName(self):
+    def getName(self):
         return self.name + "." + self.extension
 
 
@@ -24,6 +25,7 @@ class Folder(File):
     def __init__(self, name, prev):
         super().__init__(name, prev, "dir")
         self.contents = []
+        self.isOpened = False
 
     def getLocation(self):
         loc = self.name
@@ -43,45 +45,51 @@ class Folder(File):
                 return True
         return False
 
+    def isOpened(self):
+        return self.isOpened
+
+
+root = Folder("root", None)
+current_dir = root
+selected_dir = None
+
+
+def fileTree(_dir, depth):
+    for d in _dir.contents:
+        for _ in range(depth):
+            print(" ", end="")
+        print("ㄴ", end=" ")
+        print(d.getName())
+        if d is Folder and d.isOpened():
+            fileTree(d, depth + 1)
+
 
 if __name__ == "__main__":
-
-    root = Folder("root", None)
-    current_dir = root
-    selected_dir = root
-
     while True:
 
-        LIST = ["Create File",
-                "Create Folder"
-                ]
+        LIST = ["Create File", "Create Folder"]
+        select = 0
+
         if selected_dir is None:
             LIST.append("Select File/Folder")
         else:
-            LIST.append("Deselect File/Folder")
-        select = 0
+            LIST.append("Unselect File/Folder")
+            LIST.append("Copy File/Folder")
+            LIST.append("Move File/Folder")
 
         print("==========================================")
         print("Python File Manager")
         print("Current Direction: ", current_dir.getLocation())
-
-        if selected_dir is not None:
-            print("Selected Direction:", current_dir.getLocation())
-
         print("==========================================")
-        print(current_dir.getDisplayName())
-        for _file_ in current_dir.contents:
-            print(" ㄴ", _file_.getDisplayName())
+        print(current_dir.name)
+        fileTree(current_dir, 0)
         print("==========================================")
-
-        tmp = 1
-        for k in LIST:
-            print("[", tmp, "]", k)
-            tmp += 1
-
-        select = (input("Choose what you want to do: "))
-
-        if select == "1":
+        idx = 1
+        while idx <= len(LIST):
+            print("[", idx, "]", LIST[idx - 1])
+            idx += 1
+        select = LIST[int(input("Choose what you want to do: ")) - 1]
+        if select == "Create File":
             _input_ = input("[ Create File ] Insert your file name with extension (e.g. file.jpg): ")
             extension, name = "", ""
             tmp = False
@@ -89,39 +97,27 @@ if __name__ == "__main__":
                 if c == '.':
                     tmp = True
                     continue
-
                 if tmp:
                     extension = extension + c
                 else:
                     name = name + c
-
             file = File(name, current_dir, extension)
             k = 1
-            tmp = False
             while current_dir.contains(file):
-                tmp = True
                 file = File(name + " (" + str(k) + ")", current_dir, extension)
                 k += 1
 
-            if tmp:
-                print("[ Create File ] Duplicate file name: File name is changed into", file.getDisplayName())
             current_dir.addFile(file)
 
-        elif select == "2":
+        elif select == "Create Folder":
             name = input("[ Create Folder ] Insert your file name (e.g. folder): ")
 
             folder = Folder(name, current_dir)
             k = 1
-            tmp = False
             while current_dir.contains(folder):
-                tmp = True
                 folder = Folder(name + " (" + str(k) + ")", current_dir)
                 k += 1
 
-            if tmp:
-                print("[ Create Folder ] Duplicate folder name: folder name is changed into", folder.name)
-
             current_dir.addFile(folder)
-
         elif select == "3":
             print("Select File/Folder")
