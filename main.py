@@ -1,5 +1,7 @@
 from datetime import datetime
 import keyboard
+import os
+import time
 
 
 class CustomError(Exception):
@@ -56,6 +58,28 @@ selected_dir = None
 
 def fileTree(_dir, depth):
     for d in _dir.contents:
+        if selected_dir == d:
+            print(">  ")
+        else:
+            print("   ")
+        for _ in range(depth):
+            print(" ", end="")
+        print("ㄴ", end=" ")
+        print(d.getName())
+        if d is Folder and d.isOpened():
+            fileTree(d, depth + 1)
+
+
+def fileTreeWith(_dir, depth, cur):
+    for d in _dir.contents:
+        if selected_dir == d and cur != d:
+            print(">  ")
+        elif selected_dir != d and cur == d:
+            print("-> ")
+        elif selected_dir == d and cur == d:
+            print("->>")
+        else:
+            print("   ")
         for _ in range(depth):
             print(" ", end="")
         print("ㄴ", end=" ")
@@ -105,6 +129,21 @@ def createFolder():
     current_dir.addFile(folder)
 
 
+def selectFile():
+    current_selection = root
+    while True:
+        fileTreeWith(root, 0, current_selection)
+        if keyboard.is_pressed("DOWN"):
+            if current_selection.isOpened:
+                current_selection = current_selection.contents[0]
+            else:
+                current_selection = current_selection.prev.contents[
+                    current_selection.prev.contents.find(current_selection) + 1]
+        elif keyboard.is_pressed("ENTER"):
+            return current_selection
+        # TODO("함수 마저 완성")
+
+
 if __name__ == "__main__":
     while True:
 
@@ -127,7 +166,10 @@ if __name__ == "__main__":
         print("Python File Manager")
         print("Current Direction: ", current_dir.getLocation())
         print("==========================================")
-        print(current_dir.name)
+        var = "   "
+        if selected_dir == root:
+            var = ">  "
+        print(var + current_dir.name)
         fileTree(current_dir, 0)
         print("==========================================")
         idx = 1
@@ -139,5 +181,5 @@ if __name__ == "__main__":
             createFile()
         elif select == "Create Folder":
             createFolder()
-        elif select == "3":
-            print("Select File/Folder")
+        elif select == "Select File/Folder":
+            selected_dir = selectFile()
