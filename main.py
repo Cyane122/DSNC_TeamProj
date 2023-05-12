@@ -176,7 +176,13 @@ if __name__ == "__main__":
         while idx <= len(LIST):
             print("[", idx, "]", LIST[idx - 1])
             idx += 1
-        select = LIST[int(input("Choose what you want to do: ")) - 1]
+        try:
+            select = LIST[int(input("Choose what you want to do: ")) - 1]
+        except ValueError:
+            print("Invalid value. Try again please.")
+            time.sleep(0.3)
+            continue
+
         if select == "Create File":
             createFile()
         elif select == "Create Folder":
