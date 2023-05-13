@@ -1,4 +1,4 @@
-from datetime import datetime
+import time
 import keyboard
 import os
 import time
@@ -14,10 +14,10 @@ class CustomError(Exception):
 
 class File:
     def __init__(self, name, prev, extension):
-        self.name = name
-        self.prev = prev
-        self.time = datetime.now()
-        self.extension = extension
+        self.name: str = name
+        self.prev: Folder = prev
+        self.time = time.localtime()
+        self.extension: str = extension
 
     def getName(self):
         return self.name + "." + self.extension
@@ -54,18 +54,19 @@ class Folder(File):
 root = Folder("root", None)
 current_dir = root
 selected_dir = None
+dic: dict = {}
 
 
 def fileTree(_dir, depth):
     for d in _dir.contents:
+        for _ in range(depth):
+            print("   ", end="")
         if selected_dir == d:
-            print(">  ")
+            print(">  ", end="")
         else:
             print("   ")
-        for _ in range(depth):
-            print(" ", end="")
         print("ㄴ", end=" ")
-        print(d.getName())
+        print(d.getName(), end="")
         if d is Folder and d.isOpened():
             fileTree(d, depth + 1)
 
@@ -130,23 +131,16 @@ def createFolder():
 
 
 def selectFile():
-    current_selection = root
-    while True:
-        fileTreeWith(root, 0, current_selection)
-        if keyboard.is_pressed("DOWN"):
-            if current_selection.isOpened:
-                current_selection = current_selection.contents[0]
-            else:
-                current_selection = current_selection.prev.contents[
-                    current_selection.prev.contents.find(current_selection) + 1]
-        elif keyboard.is_pressed("ENTER"):
-            return current_selection
-        # TODO("함수 마저 완성")
+    select = input("[ Select File/Folder ] Enter the alphabet of the file/folder you want to select: ")
+    if dict[select] is None or dict[select] is not File:
+        print("[ Select File/Folder ] Invalid value; Try again please.")
+        time.sleep(0.3)
+        return None
+    return dict[select]
 
 
 if __name__ == "__main__":
     while True:
-
         LIST = ["Create File", "Create Folder"]
         select = 0
 
@@ -166,11 +160,21 @@ if __name__ == "__main__":
         print("Python File Manager")
         print("Current Direction: ", current_dir.getLocation())
         print("==========================================")
-        var = "   "
-        if selected_dir == root:
-            var = ">  "
-        print(var + current_dir.name)
-        fileTree(current_dir, 0)
+        idx: int = 65  # chr(idx) = 'A'
+
+        for k in dic.keys():
+            dic[k] = None
+
+        if len(current_dir.contents) == 0:
+            print("this folder is empty...")
+        else:
+            for d in current_dir.contents:
+                dic[idx] = d
+                print(f"[{chr(idx)}] {d.getName():18s}", end="")
+                now = d.time
+                print("%04d/%02d/%02d %02d:%02d:%02d" % (
+                    now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec))
+                idx += 1
         print("==========================================")
         idx = 1
         while idx <= len(LIST):
@@ -188,4 +192,6 @@ if __name__ == "__main__":
         elif select == "Create Folder":
             createFolder()
         elif select == "Select File/Folder":
-            selected_dir = selectFile()
+            tmp = selectFile()
+            if tmp is not None:
+                selected_dir = tmp
