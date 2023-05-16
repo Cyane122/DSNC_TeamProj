@@ -57,7 +57,9 @@ class Folder(File):
 
 root = Folder("root", None)
 current_dir = root
-selected_dir = None
+selected_dir: File = None
+copying_dir: File = None
+moving_dir: File = None
 dic: dict = {}
 
 
@@ -144,19 +146,17 @@ def selectFile():
     return dic[ord(select)]
 
 
-def copyFileFolder():
-    pass
-
-
-def moveFileFolder():
-    pass
-
-
 if __name__ == "__main__":
     while True:
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         LIST = ["Create File", "Create Folder"]
         select = 0
+
+        if copying_dir is not None:
+            LIST.append("Paste " + copying_dir.getName())
+
+        if moving_dir is not None and moving_dir.prev != current_dir:
+            LIST.append("Move " + moving_dir.getName() + " to " + current_dir.getName())
 
         if selected_dir is None:
             LIST.append("Select File/Folder")
@@ -182,6 +182,10 @@ if __name__ == "__main__":
         print("Current Direction: ", current_dir.getLocation())
         if selected_dir is not None:
             print("Selected Direction:", selected_dir.getLocation())
+        if copying_dir is not None:
+            print("<< Copying", copying_dir.getLocation(), ">>")
+        if moving_dir is not None:
+            print("<< Moving", moving_dir.getLocation(), ">>")
         print("==========================================")
         idx: int = 65  # chr(idx) = 'A'
 
@@ -221,9 +225,11 @@ if __name__ == "__main__":
         elif select == "Unselect File" or select == "Unselect Folder":
             selected_dir = None
         elif select == "Copy File" or select == "Copy Folder":
-            copyFileFolder()
+            copying_dir = selected_dir
+            selected_dir = None
         elif select == "Move File" or select == "Move Folder":
-            moveFileFolder()
+            moving_dir = selected_dir
+            selected_dir = None
         elif selected_dir is not None and select == "Goto " + selected_dir.name:
             current_dir = selected_dir
         elif select == "Move to " + current_dir.prev.name:
