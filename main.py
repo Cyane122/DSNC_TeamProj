@@ -1,7 +1,9 @@
+import math
 import time
 import keyboard
 import os
 import time
+import random
 
 
 ##
@@ -21,6 +23,7 @@ class File:
         self.prev: Folder = prev
         self.time = time.localtime()
         self.extension: str = extension
+        self.UUID = math.floor(random.random() * 1000000)
 
     def getName(self):
         return self.name + "." + self.extension
@@ -47,7 +50,7 @@ class Folder(File):
 
     def contains(self, item):
         for _ in self.contents:
-            if _.name == item.name and _.extension == item.extension:
+            if _.UUID == item.UUID:
                 return True
         return False
 
@@ -61,38 +64,6 @@ selected_dir: File = None
 copying_dir: File = None
 moving_dir: File = None
 dic: dict = {}
-
-
-def fileTree(_dir, depth):
-    for d in _dir.contents:
-        for _ in range(depth):
-            print("   ", end="")
-        if selected_dir == d:
-            print(">  ", end="")
-        else:
-            print("   ")
-        print("ㄴ", end=" ")
-        print(d.getName(), end="")
-        if d is Folder and d.isOpened():
-            fileTree(d, depth + 1)
-
-
-def fileTreeWith(_dir, depth, cur):
-    for d in _dir.contents:
-        if selected_dir == d and cur != d:
-            print(">  ")
-        elif selected_dir != d and cur == d:
-            print("-> ")
-        elif selected_dir == d and cur == d:
-            print("->>")
-        else:
-            print("   ")
-        for _ in range(depth):
-            print(" ", end="")
-        print("ㄴ", end=" ")
-        print(d.getName())
-        if d is Folder and d.isOpened():
-            fileTree(d, depth + 1)
 
 
 def createFile():
@@ -161,10 +132,11 @@ if __name__ == "__main__":
         if selected_dir is None:
             LIST.append("Select File/Folder")
         else:
-            if selected_dir is Folder:
+            if selected_dir.extension == "dir":
                 LIST.append("Unselect Folder")
                 if current_dir.contains(selected_dir):
                     LIST.append(("Goto " + selected_dir.name))
+                print(current_dir.contains(selected_dir))
                 LIST.append("Copy Folder")
                 LIST.append("Move Folder")
                 LIST.append("Delete " + selected_dir.name)
