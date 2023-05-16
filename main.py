@@ -163,14 +163,16 @@ if __name__ == "__main__":
         else:
             if selected_dir is Folder:
                 LIST.append("Unselect Folder")
-                LIST.append("Copy Folder")
-                LIST.append("Move Folder")
-            else:
-                LIST.append("Unselect File")
                 if current_dir.contains(selected_dir):
                     LIST.append(("Goto " + selected_dir.name))
+                LIST.append("Copy Folder")
+                LIST.append("Move Folder")
+                LIST.append("Delete " + selected_dir.name)
+            else:
+                LIST.append("Unselect File")
                 LIST.append("Copy File")
                 LIST.append("Move File")
+                LIST.append("Delete " + selected_dir.name + "." + selected_dir.extension)
 
         if current_dir.prev is not None:
             LIST.append("Move to " + current_dir.prev.name)
