@@ -1,13 +1,15 @@
 import math
 import time
-import keyboard
-import os
-import time
 import random
 
 
 ##
+# Please, Dont...
 ##
+
+def newUUID():
+    return math.floor(random.random() * 1000000)
+
 
 class CustomError(Exception):
     def __init__(self, msg):
@@ -25,6 +27,13 @@ class File:
         self.extension: str = extension
         self.UUID = math.floor(random.random() * 1000000)
 
+    def __init__(self, name, prev, extension, time, UUID):
+        self.name: str = name
+        self.prev: Folder = prev
+        self.time = time
+        self.extension: str = extension
+        self.UUID = UUID
+
     def getName(self):
         return self.name + "." + self.extension
 
@@ -41,12 +50,27 @@ class File:
 
 class Folder(File):
     def __init__(self, name, prev):
-        super().__init__(name, prev, "dir")
+        super().__init__(name, prev, "dir", time.localtime(), newUUID())
         self.contents = []
         self.isOpened = False
+        self.cur_sort = 0  # cur_sort: 0 -> Created Time / 1 -> Name / 2 -> Extension
 
     def addFile(self, addFile):
+        file = File(addFile.name, self, addFile.extension, addFile.time, newUUID())
+        if not self.containsName(file):
+            self.contents.append(addFile)
+            return
+        k = 1
+        while self.containsName(file):
+            file = File(addFile.name + " (" + str(k) + ")", self, addFile.extension)
+            k += 1
         self.contents.append(addFile)
+
+    def containsName(self, item):
+        for _ in self.contents:
+            if _.name == item.name and _.extension == item.extension:
+                return True
+        return False
 
     def contains(self, item):
         for _ in self.contents:
@@ -57,6 +81,14 @@ class Folder(File):
     def isOpened(self):
         return self.isOpened
 
+    def sort(self):
+        if self.cur_sort == 0:  # Created Time
+            self.contents.sort(key=lambda x: x.time)
+        elif self.cur_sort == 1:  # Name
+            self.contents.sort(key=lambda x: x.name)
+        elif self.cur_sort == 2:  # Extension
+            self.contents.sort(key=lambda x: x.extension)
+
 
 root = Folder("root", None)
 current_dir = root
@@ -64,6 +96,9 @@ selected_dir: File = None
 copying_dir: File = None
 moving_dir: File = None
 dic: dict = {}
+sortBy = ("Created Time", "Name", "Extension")
+cur_sort = 0
+sort_selection = False
 
 
 def createFile():
@@ -84,6 +119,10 @@ def createFile():
             name = name + c
     if extension == "":
         print("[ Create File ] Wrong input; Try again.")
+        createFile()
+        return
+    if extension == "dir":
+        print("[ Create File ] *.dir extension not allowed; It's for Folder.")
         createFile()
         return
     file = File(name, current_dir, extension)
@@ -114,7 +153,12 @@ def selectFile():
         print("[ Select File/Folder ] Invalid value; Try again please.")
         time.sleep(0.3)
         return None
-    return dic[ord(select)]
+
+    try:
+        return dic[ord(select)]
+    except KeyError:
+        print("[ Select File/Folder ] Wrong input; Try again please.")
+        return selectFile()
 
 
 if __name__ == "__main__":
@@ -147,7 +191,10 @@ if __name__ == "__main__":
                 LIST.append("Delete " + selected_dir.name + "." + selected_dir.extension)
 
         if current_dir.prev is not None:
-            LIST.append("Move to " + current_dir.prev.name)
+            LIST.append("Goto " + current_dir.prev.name)
+
+        LIST.append("Sort by: %s" % (sortBy[current_dir.cur_sort]))
+        current_dir.sort()
 
         print("==========================================")
         print("Python File Manager")
@@ -169,18 +216,27 @@ if __name__ == "__main__":
         else:
             for d in current_dir.contents:
                 dic[idx]: File = d
-                print(f"[{chr(idx)}] {d.getName():18s}", end="")
+                print(f"[ {chr(idx):2s} ] {d.getName():17s} ", end="")
                 now = d.time
                 print("%04d/%02d/%02d %02d:%02d:%02d" % (
                     now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec))
                 idx += 1
         print("==========================================")
-        idx = 1
-        while idx <= len(LIST):
-            print("[", idx, "]", LIST[idx - 1])
-            idx += 1
+        if not sort_selection:
+            idx = 1
+            while idx <= len(LIST):
+                print("[ %02d ] %s" % (idx, LIST[idx - 1]))
+                idx += 1
+        else:
+            idx = 1
+            while idx <= len(sortBy):
+                print("[ %02d ] %s" % (idx, sortBy[idx - 1]))
+                idx += 1
         try:
-            select = LIST[int(input("Choose what you want to do: ")) - 1]
+            if sort_selection:
+                select = sortBy[int(input("Choose how you want to sort: ")) - 1]
+            else:
+                select = LIST[int(input("Choose what you want to do: ")) - 1]
         except ValueError:
             print("Invalid value. Try again please.")
             time.sleep(0.3)
@@ -204,5 +260,23 @@ if __name__ == "__main__":
             selected_dir = None
         elif selected_dir is not None and select == "Goto " + selected_dir.name:
             current_dir = selected_dir
-        elif select == "Move to " + current_dir.prev.name:
+        elif current_dir.prev is not None and select == "Goto " + current_dir.prev.name:
             current_dir = current_dir.prev
+        elif "Paste" in select:
+            current_dir.addFile(File(copying_dir.name, current_dir, copying_dir.extension))
+        elif "Move" in select:
+            current_dir.addFile(File(moving_dir.name, current_dir, moving_dir.extension))
+            moving_dir.prev.contents.remove(moving_dir)
+            moving_dir = None
+        elif "Sort by" in select:
+            sort_selection = True
+        elif "Time" in select:
+            current_dir.cur_sort = 0
+            sort_selection = False
+        elif "Name" in select:
+            current_dir.cur_sort = 1
+            sort_selection = False
+        elif "Extension" in select:
+            current_dir.cur_sort = 2
+            sort_selection = False
+
