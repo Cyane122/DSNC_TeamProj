@@ -7,16 +7,15 @@ import random
 # Please, Dont...
 ##
 
+UUID_LIST: list = [0 for i in range(1000000)]
+
+
 def newUUID():
-    return math.floor(random.random() * 1000000)
-
-
-class CustomError(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
+    uuid = math.floor(random.random() * 1000000)
+    while UUID_LIST.__getitem__(uuid):
+        uuid = math.floor(random.random() * 1000000)
+    UUID_LIST[uuid] = True
+    return uuid
 
 
 class File:
@@ -52,8 +51,8 @@ class Folder(File):
     def __init__(self, name, prev):
         super().__init__(name, prev, "dir", time.localtime(), newUUID())
         self.contents = []
-        self.isOpened = False
         self.cur_sort = 0  # cur_sort: 0 -> Created Time / 1 -> Name / 2 -> Extension
+        self.cur_dir = True  # cur_dir: True -> Ascending Order / False -> Descending Order
 
     def addFile(self, addFile):
         file = File(addFile.name, self, addFile.extension, addFile.time, newUUID())
@@ -78,16 +77,13 @@ class Folder(File):
                 return True
         return False
 
-    def isOpened(self):
-        return self.isOpened
-
     def sort(self):
         if self.cur_sort == 0:  # Created Time
-            self.contents.sort(key=lambda x: x.time)
+            self.contents.sort(key=lambda x: x.time, reverse=(not self.cur_dir))
         elif self.cur_sort == 1:  # Name
-            self.contents.sort(key=lambda x: x.name)
+            self.contents.sort(key=lambda x: x.name, reverse=(not self.cur_dir))
         elif self.cur_sort == 2:  # Extension
-            self.contents.sort(key=lambda x: x.extension)
+            self.contents.sort(key=lambda x: x.extension, reverse=(not self.cur_dir))
 
 
 root = Folder("root", None)
@@ -97,8 +93,10 @@ copying_dir: File = None
 moving_dir: File = None
 dic: dict = {}
 sortBy = ("Created Time", "Name", "Extension")
+sortDir = ("Ascending Order", "Descending Order")
 cur_sort = 0
 sort_selection = False
+sort_upperDown = False
 
 
 def createFile():
@@ -125,7 +123,7 @@ def createFile():
         print("[ Create File ] *.dir extension not allowed; It's for Folder.")
         createFile()
         return
-    file = File(name, current_dir, extension)
+    file = File(name, current_dir, extension, time.localtime(), newUUID())
     k = 1
     while current_dir.contains(file):
         file = File(name + " (" + str(k) + ")", current_dir, extension)
@@ -148,7 +146,11 @@ def createFolder():
 
 def selectFile():
     select = input("[ Select File/Folder ] Enter the alphabet of the file/folder you want to select: ")
-    print(type(dic[ord(select)]))
+    try:
+        t = dic[ord(select)]
+    except KeyError:
+        print("[ Select File/Folder ] Wrong input: Try again please.")
+        return selectFile()
     if dic[ord(select)] is None:
         print("[ Select File/Folder ] Invalid value; Try again please.")
         time.sleep(0.3)
@@ -161,10 +163,33 @@ def selectFile():
         return selectFile()
 
 
+def deleteFile():
+    selected_dir.prev.contents.remove(selected_dir)
+
+
+def searchFile():
+    search = input("[ Search File/Folder ] Enter the name or extension of the file you are looking for: ")
+    if "." in search:
+        extension, name = "", ""
+        tmp = False
+        for c in search:
+            if c == '.':
+                if tmp:
+                    name = name + '.' + extension
+                    extension = ""
+                else:
+                    tmp = True
+                continue
+            if tmp:
+                extension = extension + c
+            else:
+                name = name + c
+
+
 if __name__ == "__main__":
     while True:
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-        LIST = ["Create File", "Create Folder"]
+        LIST = ["Create File", "Create Folder", "Search File/Folder"]
         select = 0
 
         if copying_dir is not None:
@@ -193,7 +218,12 @@ if __name__ == "__main__":
         if current_dir.prev is not None:
             LIST.append("Goto " + current_dir.prev.name)
 
-        LIST.append("Sort by: %s" % (sortBy[current_dir.cur_sort]))
+        if current_dir.cur_dir:
+            tmp = "Ascending"
+        else:
+            tmp = "Descending"
+
+        LIST.append("Sort by: %s - %s" % (sortBy[current_dir.cur_sort], tmp))
         current_dir.sort()
 
         print("==========================================")
@@ -216,32 +246,38 @@ if __name__ == "__main__":
         else:
             for d in current_dir.contents:
                 dic[idx]: File = d
-                print(f"[ {chr(idx):2s} ] {d.getName():17s} ", end="")
+                print(f"[ {chr(idx)} ] {d.getName():17s} ", end="")
                 now = d.time
                 print("%04d/%02d/%02d %02d:%02d:%02d" % (
                     now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec))
                 idx += 1
         print("==========================================")
-        if not sort_selection:
-            idx = 1
-            while idx <= len(LIST):
-                print("[ %02d ] %s" % (idx, LIST[idx - 1]))
-                idx += 1
-        else:
+        if sort_selection:
             idx = 1
             while idx <= len(sortBy):
                 print("[ %02d ] %s" % (idx, sortBy[idx - 1]))
                 idx += 1
+        elif sort_upperDown:
+            idx = 1
+            while idx <= len(sortDir):
+                print("[ %02d ] %s" % (idx, sortDir[idx - 1]))
+                idx += 1
+        else:
+            idx = 1
+            while idx <= len(LIST):
+                print("[ %02d ] %s" % (idx, LIST[idx - 1]))
+                idx += 1
         try:
             if sort_selection:
                 select = sortBy[int(input("Choose how you want to sort: ")) - 1]
+            elif sort_upperDown:
+                select = sortDir[int(input("Choose between ascending and descending order: ")) - 1]
             else:
                 select = LIST[int(input("Choose what you want to do: ")) - 1]
         except ValueError:
             print("Invalid value. Try again please.")
             time.sleep(0.3)
             continue
-
         if select == "Create File":
             createFile()
         elif select == "Create Folder":
@@ -252,6 +288,8 @@ if __name__ == "__main__":
                 selected_dir = tmp
         elif select == "Unselect File" or select == "Unselect Folder":
             selected_dir = None
+            moving_dir = None
+            copying_dir = None
         elif select == "Copy File" or select == "Copy Folder":
             copying_dir = selected_dir
             selected_dir = None
@@ -262,6 +300,9 @@ if __name__ == "__main__":
             current_dir = selected_dir
         elif current_dir.prev is not None and select == "Goto " + current_dir.prev.name:
             current_dir = current_dir.prev
+        elif "Delete" in select:
+            deleteFile()
+            selected_dir = None
         elif "Paste" in select:
             current_dir.addFile(File(copying_dir.name, current_dir, copying_dir.extension))
         elif "Move" in select:
@@ -273,10 +314,20 @@ if __name__ == "__main__":
         elif "Time" in select:
             current_dir.cur_sort = 0
             sort_selection = False
+            sort_upperDown = True
         elif "Name" in select:
             current_dir.cur_sort = 1
             sort_selection = False
+            sort_upperDown = True
         elif "Extension" in select:
             current_dir.cur_sort = 2
             sort_selection = False
-
+            sort_upperDown = True
+        elif select == "Ascending Order":
+            current_dir.cur_dir = True
+            sort_upperDown = False
+        elif select == "Descending Order":
+            current_dir.cur_dir = False
+            sort_upperDown = False
+        elif "Search" in select:
+            searchFile()
