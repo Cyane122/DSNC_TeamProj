@@ -1,4 +1,5 @@
 import math
+import queue
 import time
 import random
 
@@ -166,6 +167,7 @@ def deleteFile():
 def searchFile():
     search = input("[ Search File/Folder ] Enter the name or extension of the file you are looking for: ")
     searchList = []
+    q: list = [root]
     if "." in search:  # If input has "Extension"
         extension, name = "", ""
         tmp = False
@@ -181,9 +183,61 @@ def searchFile():
                 extension = extension + c
             else:
                 name = name + c
-        if name == "*":
-            for d in root.contents:
-                pass
+        if name == "*" and extension != "*":
+            while len(q) != 0:
+                if q[0].extension == extension:
+                    searchList.append(q[0])
+                if q[0] is Folder:
+                    for d in q[0]:
+                        q.append(d)
+                q.pop(0)
+        elif extension == "*" and name != "*":
+            while len(q) != 0:
+                if q[0].name == name:
+                    searchList.append(q[0])
+                if q[0] is Folder:
+                    for d in q[0]:
+                        q.append(d)
+                q.pop(0)
+        elif extension == "*" and name == "*":
+            while len(q) != 0:
+                searchList.append(q[0])
+                if q[0] is Folder:
+                    for d in q[0]:
+                        q.append(d)
+                q.pop(0)
+        else:
+            while len(q) != 0:
+                if q[0].name == name and q[0].extension == extension:
+                    searchList.append(q[0])
+                if q[0] is Folder:
+                    for d in q[0]:
+                        q.append(d)
+                q.pop(0)
+    else:  # not Extension
+        name = search
+        while len(q) != 0:
+            if name in q[0].name:
+                searchList.append(q[0])
+            if q[0] is Folder:
+                for d in q[0]:
+                    q.append(d)
+    print("==========================================")
+    print("Python File Manager")
+    print("==========================================")
+    idx: int = 65  # chr(idx) = 'A'
+    for k in dic.keys():
+        dic[k] = None
+
+    if len(searchList) == 0:
+        print("Didn't find anything...")
+    else:
+        for d in searchList:
+            dic[idx]: File = d
+            print(f"[ {chr(idx)} ] {d.getName():17s} {d.getLocation()}", end="")
+            idx += 1
+    print("==========================================")
+    input()
 
 
 if __name__ == "__main__":
