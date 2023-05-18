@@ -3,11 +3,7 @@ import time
 import random
 
 
-##
-# Please, Dont...
-##
-
-UUID_LIST: list = [0 for i in range(1000000)]
+UUID_LIST: list = [0 for i in range(1000000)]  # To prevent UUID duplication...
 
 
 def newUUID():
@@ -169,7 +165,8 @@ def deleteFile():
 
 def searchFile():
     search = input("[ Search File/Folder ] Enter the name or extension of the file you are looking for: ")
-    if "." in search:
+    searchList = []
+    if "." in search:  # If input has "Extension"
         extension, name = "", ""
         tmp = False
         for c in search:
@@ -184,6 +181,9 @@ def searchFile():
                 extension = extension + c
             else:
                 name = name + c
+        if name == "*":
+            for d in root.contents:
+                pass
 
 
 if __name__ == "__main__":
