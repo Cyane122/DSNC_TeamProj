@@ -187,43 +187,45 @@ def searchFile():
             while len(q) != 0:
                 if q[0].extension == extension:
                     searchList.append(q[0])
-                if q[0] is Folder:
-                    for d in q[0]:
+                if q[0].extension == "dir":
+                    for d in q[0].contents:
                         q.append(d)
                 q.pop(0)
         elif extension == "*" and name != "*":
             while len(q) != 0:
                 if q[0].name == name:
                     searchList.append(q[0])
-                if q[0] is Folder:
-                    for d in q[0]:
+                if q[0].extension == "dir":
+                    for d in q[0].contents:
                         q.append(d)
                 q.pop(0)
         elif extension == "*" and name == "*":
             while len(q) != 0:
                 searchList.append(q[0])
-                if q[0] is Folder:
-                    for d in q[0]:
+                if q[0].extension == "dir":
+                    for d in q[0].contents:
                         q.append(d)
                 q.pop(0)
         else:
             while len(q) != 0:
                 if q[0].name == name and q[0].extension == extension:
                     searchList.append(q[0])
-                if q[0] is Folder:
-                    for d in q[0]:
+                if q[0].extension == "dir":
+                    for d in q[0].contents:
                         q.append(d)
                 q.pop(0)
     else:  # not Extension
         name = search
         while len(q) != 0:
-            if name in q[0].name:
+            if name in q[0].name or name in q[0].extension:
                 searchList.append(q[0])
-            if q[0] is Folder:
-                for d in q[0]:
+            if q[0].extension == "dir":
+                for d in q[0].contents:
                     q.append(d)
+            q.pop(0)
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
     print("==========================================")
-    print("Python File Manager")
+    print("Search Result - %s" % search)
     print("==========================================")
     idx: int = 65  # chr(idx) = 'A'
     for k in dic.keys():
@@ -234,10 +236,26 @@ def searchFile():
     else:
         for d in searchList:
             dic[idx]: File = d
-            print(f"[ {chr(idx)} ] {d.getName():17s} {d.getLocation()}", end="")
+            print(f"[ {chr(idx)} ] {d.getName():17s} {d.getLocation()}")
             idx += 1
     print("==========================================")
-    input()
+    LIST = ["Select File/Folder", "Go back"]
+    idx = 1
+    while idx <= len(LIST):
+        print("[ %02d ] %s" % (idx, LIST[idx - 1]))
+        idx += 1
+    select = LIST[int(input("Choose what you want to do: ")) - 1]
+    if select == "Select File/Folder":
+        tmp = selectFile()
+        if tmp is not None:
+            global selected_dir
+            selected_dir = tmp
+    elif select == "Go back":
+        return
+
+
+def renameFile():
+    pass
 
 
 if __name__ == "__main__":
@@ -262,11 +280,13 @@ if __name__ == "__main__":
                 print(current_dir.contains(selected_dir))
                 LIST.append("Copy Folder")
                 LIST.append("Move Folder")
+                LIST.append("Rename %s" % selected_dir.name)
                 LIST.append("Delete " + selected_dir.name)
             else:
                 LIST.append("Unselect File")
                 LIST.append("Copy File")
                 LIST.append("Move File")
+                LIST.append("Rename %s.%s" % (selected_dir.name, selected_dir.extension))
                 LIST.append("Delete " + selected_dir.name + "." + selected_dir.extension)
 
         if current_dir.prev is not None:
@@ -358,9 +378,10 @@ if __name__ == "__main__":
             deleteFile()
             selected_dir = None
         elif "Paste" in select:
-            current_dir.addFile(File(copying_dir.name, current_dir, copying_dir.extension))
+            current_dir.addFile(File(copying_dir.name, current_dir, copying_dir.extension, time.localtime(), newUUID()))
         elif "Move" in select:
-            current_dir.addFile(File(moving_dir.name, current_dir, moving_dir.extension))
+            current_dir.addFile(File(moving_dir.name, current_dir,
+                                     moving_dir.extension, time.localtime(), moving_dir.UUID))
             moving_dir.prev.contents.remove(moving_dir)
             moving_dir = None
         elif "Sort by" in select:
@@ -385,3 +406,5 @@ if __name__ == "__main__":
             sort_upperDown = False
         elif "Search" in select:
             searchFile()
+        elif "Rename" in select:
+            renameFile()
