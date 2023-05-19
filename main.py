@@ -1,7 +1,13 @@
 import math
-import queue
 import time
 import random
+
+"""
+" TODO-THINGS
+" 1. UPDATE FILE/FOLDER
+" 2. Init()
+" 3. 실제로 돌려보면서 오류 최대한 찾아서 고쳐보기!
+"""
 
 
 UUID_LIST: list = [0 for i in range(1000000)]  # To prevent UUID duplication...
@@ -9,19 +15,13 @@ UUID_LIST: list = [0 for i in range(1000000)]  # To prevent UUID duplication...
 
 def newUUID():
     uuid = math.floor(random.random() * 1000000)
-    while UUID_LIST.__getitem__(uuid):
+    while UUID_LIST[uuid]:
         uuid = math.floor(random.random() * 1000000)
     UUID_LIST[uuid] = True
     return uuid
 
 
 class File:
-    def __init__(self, name, prev, extension):
-        self.name: str = name
-        self.prev: Folder = prev
-        self.time = time.localtime()
-        self.extension: str = extension
-        self.UUID = math.floor(random.random() * 1000000)
 
     def __init__(self, name, prev, extension, time, UUID):
         self.name: str = name
@@ -49,18 +49,22 @@ class Folder(File):
         super().__init__(name, prev, "dir", time.localtime(), newUUID())
         self.contents = []
         self.cur_sort = 0  # cur_sort: 0 -> Created Time / 1 -> Name / 2 -> Extension
-        self.cur_dir = True  # cur_dir: True -> Ascending Order / False -> Descending Order
+        self.order = True  # order: True -> Ascending Order / False -> Descending Order
 
-    def addFile(self, addFile):
-        file = File(addFile.name, self, addFile.extension, addFile.time, newUUID())
+    def addFile5(self, name, extension, time, UUID):
+        file = File(name, self, extension, time, UUID)
+        tmpFile = file
         if not self.containsName(file):
-            self.contents.append(addFile)
+            self.contents.append(file)
             return
         k = 1
         while self.containsName(file):
-            file = File(addFile.name + " (" + str(k) + ")", self, addFile.extension)
+            file = File(tmpFile.name + " (" + str(k) + ")", self, file.extension)
             k += 1
-        self.contents.append(addFile)
+        self.contents.append(file)
+
+    def addFile(self, addFile):
+        self.addFile5(addFile.name, addFile.extension, addFile.time, addFile.UUID)
 
     def containsName(self, item):
         for _ in self.contents:
@@ -76,11 +80,11 @@ class Folder(File):
 
     def sort(self):
         if self.cur_sort == 0:  # Created Time
-            self.contents.sort(key=lambda x: x.time, reverse=(not self.cur_dir))
+            self.contents.sort(key=lambda x: x.time, reverse=(not self.order))
         elif self.cur_sort == 1:  # Name
-            self.contents.sort(key=lambda x: x.name, reverse=(not self.cur_dir))
+            self.contents.sort(key=lambda x: x.name, reverse=(not self.order))
         elif self.cur_sort == 2:  # Extension
-            self.contents.sort(key=lambda x: x.extension, reverse=(not self.cur_dir))
+            self.contents.sort(key=lambda x: x.extension, reverse=(not self.order))
 
 
 root = Folder("root", None)
@@ -225,7 +229,7 @@ def searchFile():
             q.pop(0)
     print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
     print("==========================================")
-    print("Search Result - %s" % search)
+    print("Search Result - %s - %d found " % (search, len(searchList)))
     print("==========================================")
     idx: int = 65  # chr(idx) = 'A'
     for k in dic.keys():
@@ -258,7 +262,14 @@ def renameFile():
     pass
 
 
+def initTest():
+    TEMP = Folder("temp", time.localtime())
+    TEMP.addFile5("desktop", "jpg", time.localtime(), newUUID())
+    root.addFile(Folder("temp", time.localtime()))
+
+
 if __name__ == "__main__":
+    initTest()
     while True:
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         LIST = ["Create File", "Create Folder", "Search File/Folder"]
@@ -292,13 +303,15 @@ if __name__ == "__main__":
         if current_dir.prev is not None:
             LIST.append("Goto " + current_dir.prev.name)
 
-        if current_dir.cur_dir:
+        if current_dir.order:
             tmp = "Ascending"
         else:
             tmp = "Descending"
 
         LIST.append("Sort by: %s - %s" % (sortBy[current_dir.cur_sort], tmp))
         current_dir.sort()
+
+        LIST.append("Quit")
 
         print("==========================================")
         print("Python File Manager")
@@ -399,12 +412,14 @@ if __name__ == "__main__":
             sort_selection = False
             sort_upperDown = True
         elif select == "Ascending Order":
-            current_dir.cur_dir = True
+            current_dir.order = True
             sort_upperDown = False
         elif select == "Descending Order":
-            current_dir.cur_dir = False
+            current_dir.order = False
             sort_upperDown = False
         elif "Search" in select:
             searchFile()
         elif "Rename" in select:
             renameFile()
+        elif select == "Quit":
+            break
