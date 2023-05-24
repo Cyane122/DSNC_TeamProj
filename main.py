@@ -35,9 +35,9 @@ class File:
 
     def getLocation(self):
         loc = self.name + "." + self.extension
-        file = self
+        file: File = self
         while file.prev is not None:
-            file = file.prev
+            file: Folder = file.prev
             t: str = file.name + "." + file.extension
             loc = t + "\\" + loc
 
@@ -63,8 +63,26 @@ class Folder(File):
             k += 1
         self.contents.append(file)
 
+    def addFolder5(self, name):
+        file = Folder(name, self)
+        tmpFile = file
+        if not self.containsName(file):
+            self.contents.append(file)
+            return
+        k = 1
+        while self.containsName(file):
+            file = File(tmpFile.name + " (" + str(k) + ")", self, file.extension)
+            k += 1
+        self.contents.append(file)
+
+    def addFolder(self, folder):
+        self.contents.append(folder)
+
     def addFile(self, addFile):
-        self.addFile5(addFile.name, addFile.extension, addFile.time, addFile.UUID)
+        if addFile.extension == "dir":
+            self.addFolder5(addFile.name)
+        else:
+            self.addFile5(addFile.name, addFile.extension, addFile.time, addFile.UUID)
 
     def containsName(self, item):
         for _ in self.contents:
@@ -259,17 +277,15 @@ def searchFile():
 
 
 def renameFile():
-    pass
-
-
-def initTest():
-    TEMP = Folder("temp", time.localtime())
-    TEMP.addFile5("desktop", "jpg", time.localtime(), newUUID())
-    root.addFile(Folder("temp", time.localtime()))
+    print("[ Rename File/Folder ] Alert! You can ONLY change file name, not extension!")
+    change_name = input("[ Rename File/Folder] Enter the name of the file/folder you want to change. By entering"
+                        " nothing, you can cancel the change: ")
+    if len(change_name) == 0:
+        return
+    selected_dir.name = change_name
 
 
 if __name__ == "__main__":
-    initTest()
     while True:
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         LIST = ["Create File", "Create Folder", "Search File/Folder"]
@@ -288,7 +304,6 @@ if __name__ == "__main__":
                 LIST.append("Unselect Folder")
                 if current_dir.contains(selected_dir):
                     LIST.append(("Goto " + selected_dir.name))
-                print(current_dir.contains(selected_dir))
                 LIST.append("Copy Folder")
                 LIST.append("Move Folder")
                 LIST.append("Rename %s" % selected_dir.name)
@@ -313,16 +328,16 @@ if __name__ == "__main__":
 
         LIST.append("Quit")
 
-        print("==========================================")
+        print("====================================================")
         print("Python File Manager")
-        print("Current Direction: ", current_dir.getLocation())
+        print("Current Directory: ", current_dir.getLocation())
         if selected_dir is not None:
-            print("Selected Direction:", selected_dir.getLocation())
+            print("Selected File/Folder:", selected_dir.getLocation())
         if copying_dir is not None:
             print("<< Copying", copying_dir.getLocation(), ">>")
         if moving_dir is not None:
             print("<< Moving", moving_dir.getLocation(), ">>")
-        print("==========================================")
+        print("====================================================")
         idx: int = 65  # chr(idx) = 'A'
 
         for k in dic.keys():
@@ -338,7 +353,7 @@ if __name__ == "__main__":
                 print("%04d/%02d/%02d %02d:%02d:%02d" % (
                     now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec))
                 idx += 1
-        print("==========================================")
+        print("====================================================")
         if sort_selection:
             idx = 1
             while idx <= len(sortBy):
