@@ -10,7 +10,7 @@ import random
 """
 
 
-UUID_LIST: list = [0 for i in range(1000000)]  # To prevent UUID duplication...
+UUID_LIST: list = [False for i in range(1000000)]  # To prevent UUID duplication...
 
 
 def newUUID():
@@ -47,7 +47,7 @@ class File:
 class Folder(File):
     def __init__(self, name, prev):
         super().__init__(name, prev, "dir", time.localtime(), newUUID())
-        self.contents = []
+        self.contents: list = []
         self.cur_sort = 0  # cur_sort: 0 -> Created Time / 1 -> Name / 2 -> Extension
         self.order = True  # order: True -> Ascending Order / False -> Descending Order
 
@@ -71,7 +71,7 @@ class Folder(File):
             return
         k = 1
         while self.containsName(file):
-            file = File(tmpFile.name + " (" + str(k) + ")", self, file.extension)
+            file = File(tmpFile.name + " (" + str(k) + ")", self, file.extension, time.localtime(), newUUID())
             k += 1
         self.contents.append(file)
 
@@ -91,6 +91,8 @@ class Folder(File):
         return False
 
     def contains(self, item):
+        if len(self.contents) == 0:
+            return False
         for _ in self.contents:
             if _.UUID == item.UUID:
                 return True
@@ -183,6 +185,13 @@ def selectFile():
 
 
 def deleteFile():
+    temp: File = selected_dir
+    while temp is not None:
+        if temp == current_dir:
+            print("[ Delete File ] The folder you currently belong to cannot be deleted!")
+            time.sleep(0.7)
+            return
+        temp = temp.prev
     selected_dir.prev.contents.remove(selected_dir)
 
 
@@ -285,12 +294,25 @@ def renameFile():
     selected_dir.name = change_name
 
 
-if __name__ == "__main__":
+def init():
+    temp: Folder = Folder("temp", root)
+    root.addFolder(temp)
+    desktop: File = File("desktop", root, "jpg", time.localtime(), newUUID())
+    mainFolder: Folder = Folder("mainFolder", temp)
+    temp.addFolder(mainFolder)
+    temp.addFile(desktop)
+
+# 선택된 파일은 다른 폴더로 넘어가면 그 선택이 취소됨. 복사나 이동할 거면 그 자리에서 하기.
+
+
+if __name__ == "__main__":  # PROGRAM MAIN
+    init()
     while True:
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         LIST = ["Create File", "Create Folder", "Search File/Folder"]
         select = 0
-
+        if selected_dir is not None and selected_dir.prev != current_dir:
+            selected_dir = None
         if copying_dir is not None:
             LIST.append("Paste " + copying_dir.getName())
 
@@ -304,16 +326,17 @@ if __name__ == "__main__":
                 LIST.append("Unselect Folder")
                 if current_dir.contains(selected_dir):
                     LIST.append(("Goto " + selected_dir.name))
-                LIST.append("Copy Folder")
-                LIST.append("Move Folder")
-                LIST.append("Rename %s" % selected_dir.name)
-                LIST.append("Delete " + selected_dir.name)
+                    LIST.append("Copy Folder")
+                    LIST.append("Move Folder")
+                    LIST.append("Rename %s" % selected_dir.name)
+                    LIST.append("Delete " + selected_dir.name)
             else:
-                LIST.append("Unselect File")
-                LIST.append("Copy File")
-                LIST.append("Move File")
-                LIST.append("Rename %s.%s" % (selected_dir.name, selected_dir.extension))
-                LIST.append("Delete " + selected_dir.name + "." + selected_dir.extension)
+                if current_dir.contains(selected_dir):
+                    LIST.append("Unselect File")
+                    LIST.append("Copy File")
+                    LIST.append("Move File")
+                    LIST.append("Rename %s.%s" % (selected_dir.name, selected_dir.extension))
+                    LIST.append("Delete " + selected_dir.name + "." + selected_dir.extension)
 
         if current_dir.prev is not None:
             LIST.append("Goto " + current_dir.prev.name)
