@@ -201,6 +201,9 @@ def selectFile():
 
 def deleteFile():
     temp: File = selected_dir
+    select = int(input(f"[ Delete File ] Are you sure to delete ${temp.getName()}? If not, input 1: "))
+    if select == 1:
+        return
     while temp is not None:
         if temp == current_dir:
             print("[ Delete File ] The folder you currently belong to cannot be deleted!")
@@ -309,6 +312,7 @@ def renameFile():
     if len(change_name) == 0:
         return
     selected_dir.name = change_name
+    selected_dir.time = time.localtime()
 
 
 def init():
@@ -481,9 +485,11 @@ if __name__ == "__main__":  # PROGRAM MAIN
         elif select == "Ascending Order":
             current_dir.order = True
             sort_upperDown = False
+            current_dir.time = time.localtime()
         elif select == "Descending Order":
             current_dir.order = False
             sort_upperDown = False
+            current_dir.time = time.localtime()
         elif "Search" in select:
             searchFile()
         elif "Rename" in select:
