@@ -31,17 +31,32 @@ class File:
         self.UUID = UUID
 
     def getName(self):
-        return self.name + "." + self.extension
+        if self.extension == "dir":
+            return self.name
+        else:
+            return self.name + "." + self.extension
 
     def getLocation(self):
-        loc = self.name + "." + self.extension
+        if self.extension == "dir":
+            loc = self.name
+        else:
+            loc = self.name + "." + self.extension
         file: File = self
         while file.prev is not None:
             file: Folder = file.prev
-            t: str = file.name + "." + file.extension
+            if file.extension == "dir":
+                t: str = file.name
+            else:
+                t: str = file.name + "." + file.extension
             loc = t + "\\" + loc
 
         return loc
+
+    def getType(self):
+        if self.extension == "dir":
+            return "Folder"
+        else:
+            return f".{self.extension} file"
 
 
 class Folder(File):
@@ -185,7 +200,10 @@ def selectFile():
 
 
 def deleteFile():
-    temp: File = selected_dir.prev
+    temp: File = selected_dir
+    select = int(input(f"[ Delete File ] Are you sure to delete ${temp.getName()}? If not, input 1: "))
+    if select == 1:
+        return
     while temp is not None:
         if temp == current_dir:
             print("[ Delete File ] The folder you currently belong to cannot be deleted!")
@@ -255,9 +273,9 @@ def searchFile():
                     q.append(d)
             q.pop(0)
     print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-    print("==========================================")
+    print("==============================================================")
     print("Search Result - %s - %d found " % (search, len(searchList)))
-    print("==========================================")
+    print("==============================================================")
     idx: int = 65  # chr(idx) = 'A'
     for k in dic.keys():
         dic[k] = None
@@ -269,7 +287,7 @@ def searchFile():
             dic[idx]: File = d
             print(f"[ {chr(idx)} ] {d.getName():17s} {d.getLocation()}")
             idx += 1
-    print("==========================================")
+    print("==============================================================")
     LIST = ["Select File/Folder", "Go back"]
     idx = 1
     while idx <= len(LIST):
@@ -281,6 +299,8 @@ def searchFile():
         if tmp is not None:
             global selected_dir
             selected_dir = tmp
+            global current_dir
+            current_dir = tmp.prev
     elif select == "Go back":
         return
 
@@ -292,17 +312,26 @@ def renameFile():
     if len(change_name) == 0:
         return
     selected_dir.name = change_name
+    selected_dir.time = time.localtime()
 
 
 def init():
     temp: Folder = Folder("temp", root)
+    folder2020: Folder = Folder("2020", root)
     root.addFolder(temp)
+    root.addFolder(folder2020)
+    t: File = File("t", root, "txt", time.localtime(), newUUID())
+    microsoft: Folder = Folder("Microsoft", root)
+    root.addFolder(microsoft)
+    root.addFile(t)
     desktop: File = File("desktop", root, "jpg", time.localtime(), newUUID())
     mainFolder: Folder = Folder("mainFolder", temp)
     temp.addFolder(mainFolder)
     temp.addFile(desktop)
+    commonFiles: Folder = Folder("common files", microsoft)
+    microsoft.addFolder(commonFiles)
 
-# 선택된 파일은 다른 폴더로 넘어가면 그 선택이 취소됨. 복사나 이동할 거면 그 자리에서 하기.
+# 선택된 파일은 다른 폴더로 이동하면 그 선택이 취소됨. 복사나 이동할 거면 그 위치에서 하기.
 
 
 if __name__ == "__main__":  # PROGRAM MAIN
@@ -351,16 +380,19 @@ if __name__ == "__main__":  # PROGRAM MAIN
 
         LIST.append("Quit")
 
-        print("====================================================")
+        print("==============================================================")
         print("Python File Manager")
         print("Current Directory: ", current_dir.getLocation())
         if selected_dir is not None:
-            print("Selected File/Folder:", selected_dir.getLocation())
+            if selected_dir.extension == "dir":
+                print("Selected Folder:", selected_dir.getLocation())
+            else:
+                print("Selected File:", selected_dir.getLocation())
         if copying_dir is not None:
             print("<< Copying", copying_dir.getLocation(), ">>")
         if moving_dir is not None:
             print("<< Moving", moving_dir.getLocation(), ">>")
-        print("====================================================")
+        print("==============================================================")
         idx: int = 65  # chr(idx) = 'A'
 
         for k in dic.keys():
@@ -371,12 +403,13 @@ if __name__ == "__main__":  # PROGRAM MAIN
         else:
             for d in current_dir.contents:
                 dic[idx]: File = d
-                print(f"[ {chr(idx)} ] {d.getName():17s} ", end="")
+                print(f"[ {chr(idx)} ]  {d.getName():17s} ", end="")
                 now = d.time
                 print("%04d/%02d/%02d %02d:%02d:%02d" % (
-                    now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec))
+                    now.tm_year, now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec), end = "")
+                print(f"    {d.getType()}")
                 idx += 1
-        print("====================================================")
+        print("==============================================================")
         if sort_selection:
             idx = 1
             while idx <= len(sortBy):
@@ -452,9 +485,11 @@ if __name__ == "__main__":  # PROGRAM MAIN
         elif select == "Ascending Order":
             current_dir.order = True
             sort_upperDown = False
+            current_dir.time = time.localtime()
         elif select == "Descending Order":
             current_dir.order = False
             sort_upperDown = False
+            current_dir.time = time.localtime()
         elif "Search" in select:
             searchFile()
         elif "Rename" in select:
