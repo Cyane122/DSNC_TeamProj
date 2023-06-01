@@ -204,12 +204,12 @@ def deleteFile():
     select = int(input(f"[ Delete File ] Are you sure to delete ${temp.getName()}? If not, input 1: "))
     if select == 1:
         return
-    while temp is not None:
+    while temp.prev is not None:
+        temp = temp.prev
         if temp == current_dir:
             print("[ Delete File ] The folder you currently belong to cannot be deleted!")
             time.sleep(0.7)
             return
-        temp = temp.prev
     selected_dir.prev.contents.remove(selected_dir)
 
 
