@@ -185,7 +185,7 @@ def selectFile():
 
 
 def deleteFile():
-    temp: File = selected_dir
+    temp: File = selected_dir.prev
     while temp is not None:
         if temp == current_dir:
             print("[ Delete File ] The folder you currently belong to cannot be deleted!")
