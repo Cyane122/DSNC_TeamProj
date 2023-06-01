@@ -211,6 +211,11 @@ def deleteFile():
             print("[ Delete File ] The folder you currently belong to cannot be deleted!")
             time.sleep(0.7)
             return
+    global copying_dir, moving_dir
+    if copying_dir == selected_dir:
+        copying_dir = None
+    if moving_dir == selected_dir:
+        moving_dir = None
     selected_dir.prev.contents.remove(selected_dir)
     selected_dir.prev = None
 
@@ -236,7 +241,7 @@ def searchFile():
                 name = name + c
         if name == "*" and extension != "*":
             while len(q) != 0:
-                if q[0].extension == extension:
+                if q[0].extension.lower() == extension.lower():
                     searchList.append(q[0])
                 if q[0].extension == "dir":
                     for d in q[0].contents:
@@ -244,7 +249,7 @@ def searchFile():
                 q.pop(0)
         elif extension == "*" and name != "*":
             while len(q) != 0:
-                if q[0].name == name:
+                if q[0].name.lower() == name.lower():
                     searchList.append(q[0])
                 if q[0].extension == "dir":
                     for d in q[0].contents:
@@ -259,7 +264,7 @@ def searchFile():
                 q.pop(0)
         else:
             while len(q) != 0:
-                if q[0].name == name and q[0].extension == extension:
+                if q[0].name.lower() == name.lower() and q[0].extension.lower() == extension.lower():
                     searchList.append(q[0])
                 if q[0].extension == "dir":
                     for d in q[0].contents:
@@ -268,7 +273,7 @@ def searchFile():
     else:  # not Extension
         name = search
         while len(q) != 0:
-            if name in q[0].name or name in q[0].extension:
+            if name.lower() in q[0].name.lower() or name.lower() in q[0].extension.lower():
                 searchList.append(q[0])
             if q[0].extension == "dir":
                 for d in q[0].contents:
